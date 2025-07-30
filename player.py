@@ -1,10 +1,15 @@
 from circleshape import *
 from constants import *
+from Shot import *
+from asteroid import *
+
+PLAYER_SHOOT_COOLDOWN = 0.3
 
 class Player(CircleShape):
     def __init__(self, x, y):
         super().__init__(x, y, PLAYER_RADIUS)
         self.rotation = 0
+        self.shoot_cooldown = 0
 
 
         # in the player class
@@ -24,20 +29,34 @@ class Player(CircleShape):
 
     def update(self, dt):
         keys = pygame.key.get_pressed()
+        if self.shoot_cooldown > 0:
+            self.shoot_cooldown -= dt
+            if self.shoot_cooldown < 0:
+                self.shoot_cooldown = 0
 
         if keys[pygame.K_a]:
-            a = self.rotate(-1 * dt)
+            self.rotate(-1 * dt)
 
         if keys[pygame.K_d]:
-            d = self.rotate(dt)
+            self.rotate(dt)
         
         if keys[pygame.K_w]:
-            w = self.move(dt)
+            self.move(dt)
         
         if keys[pygame.K_s]:
-            s = self.move(-1 * (dt))
-            
+            self.move(-1 * (dt))
 
+        if keys[pygame.K_SPACE]:
+            self.shoot(dt)
+            
     def move(self, dt):
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
         self.position += forward * PLAYER_SPEED * dt
+
+    def shoot(self, surface):
+        if self.shoot_cooldown > 0:
+            return            
+        actual_shot = Shot(self.position.x, self.position.y)
+        shot_velocity = pygame.Vector2(0,1).rotate(self.rotation) * PLAYER_SHOOT_SPEED
+        actual_shot.velocity = shot_velocity
+        self.shoot_cooldown = PLAYER_SHOOT_COOLDOWN
